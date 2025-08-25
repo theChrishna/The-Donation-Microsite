@@ -15,21 +15,17 @@ const environment = new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_
 const client = new paypal.core.PayPalHttpClient(environment);
 
 // --- Nodemailer (Email) Configuration ---
-// Configure your email transport. 
-// Use an "App Password" for Gmail, not your regular password.
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: false, // true for 465, false for other ports
+    secure: false, 
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
 });
 
-
-// --- MODIFIED: AI Message Generation Function ---
-// This function now lives on the server and will be called by our webhook handler.
+// --- AI Message Generation Function ---
 async function generateThankYouMessage(name, amount, message) {
     try {
         let prompt = `Write a short, warm, and personal thank you message for a person named ${name} who just donated $${amount}. This donation is for our "HopeSpring Foundation" fundraiser, which provides school supplies for underprivileged children. Mention the impact on the children.`;
@@ -58,18 +54,14 @@ async function generateThankYouMessage(name, amount, message) {
         }
     } catch (error) {
         console.error('Error generating AI message:', error);
-        // Return a reliable fallback message if the AI fails
         return `Thank you so much for your generous donation of $${amount}, ${name}! Your support means the world to us and will make a real difference.`;
     }
 }
 
 // --- PayPal API Endpoints ---
-
-// 1. Create Order Endpoint
-// The frontend calls this when the PayPal button is clicked.
 app.post('/api/paypal/create-order', async (req, res) => {
+    // ... (rest of the function is the same)
     const { amount, donorInfo } = req.body;
-
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -79,11 +71,9 @@ app.post('/api/paypal/create-order', async (req, res) => {
                 currency_code: 'USD',
                 value: amount.toFixed(2)
             },
-            // Store donor info in the custom_id field to retrieve in the webhook
             custom_id: JSON.stringify(donorInfo)
         }]
     });
-
     try {
         const order = await client.execute(request);
         res.json({ orderID: order.result.id });
@@ -93,16 +83,13 @@ app.post('/api/paypal/create-order', async (req, res) => {
     }
 });
 
-// 2. Capture Order Endpoint
-// The frontend calls this after the user approves the payment in the PayPal popup.
 app.post('/api/paypal/capture-order', async (req, res) => {
+    // ... (rest of the function is the same)
     const { orderID } = req.body;
     const request = new paypal.orders.OrdersCaptureRequest(orderID);
     request.requestBody({});
-
     try {
         const capture = await client.execute(request);
-        // The webhook will handle the rest, but we send a success response to the frontend.
         res.json({ status: 'success', capture });
     } catch (err) {
         console.error('Failed to capture order:', err);
@@ -110,42 +97,29 @@ app.post('/api/paypal/capture-order', async (req, res) => {
     }
 });
 
-
-// --- NEW: Webhook Verification Endpoint ---
-// This handles a GET request from PayPal when you try to save the webhook URL.
+// --- Webhook Verification Endpoint ---
 app.get('/api/webhooks/paypal', (req, res) => {
+    // ... (rest of the function is the same)
     console.log('✅ Received a GET request to the webhook URL for validation.');
     res.status(200).send('Webhook endpoint is active and listening for POST requests.');
 });
 
-
 // --- PayPal Webhook Endpoint ---
-// This is the core of the automation. PayPal sends a notification here AFTER a payment is completed.
 app.post('/api/webhooks/paypal', async (req, res) => {
+    // ... (rest of the function is the same)
     const event = req.body;
-
-    // We only care about completed payment events
     if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
         console.log('✅ Received successful payment webhook.');
-
         try {
             const capture = event.resource;
             const amount = capture.amount.value;
-            
-            // Retrieve the donor info we stored in custom_id
             const purchase_unit = capture.purchase_units[0];
             const donorInfo = JSON.parse(purchase_unit.custom_id);
-
             const { name, email, message } = donorInfo;
             const cause = "HopeSpring Foundation's Children's Fund";
-
             console.log(`Processing donation: ${amount} from ${name} (${email})`);
-
-            // 1. Generate the AI-powered thank you message
             const aiMessage = await generateThankYouMessage(name, amount, message);
             console.log('🤖 AI message generated.');
-
-            // 2. Send the email using Nodemailer
             await transporter.sendMail({
                 from: `"HopeSpring Foundation" <${process.env.EMAIL_FROM}>`,
                 to: email,
@@ -212,21 +186,18 @@ app.post('/api/webhooks/paypal', async (req, res) => {
                 `
             });
             console.log(`✉️ Sent new dark-mode email to ${email}.`);
-
         } catch (error) {
             console.error('Error processing webhook:', error);
-            // Respond to PayPal, but log the internal error
             return res.sendStatus(500); 
         }
     }
-
-    // Respond to PayPal with a 200 OK to acknowledge receipt of the webhook
     res.sendStatus(200);
 });
 
-
-// Start the server
-const PORT = 3000;
+// --- CORRECTED: Start the server ---
+// Render provides a PORT environment variable. We should use that.
+// If it doesn't exist (like on our local machine), we fall back to 3000.
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
