@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HopeSpring | Community Fundraiser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- IMPORTANT: Replace with your PayPal Sandbox Client ID -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AeQoD2uenKXYCYDiGDnqxg5YP6Z3ga5uXI3KOhckiUgDs1mvFjnZvSDOFXpEtJs0mEhhrhS5Y_iWjAB0&currency=USD"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .amount-btn.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        .dark .amount-btn.selected { background-color: #6366f1; border-color: #6366f1; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 pt-8">
+    <div class="relative container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
+
+        <!-- NEW: Dark Mode Toggle -->
+        <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+            <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+            </label>
+        </div>
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-indigo-600 dark:text-indigo-400 mb-2">Help Us Build a Brighter Future</h1>
+            <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                Every contribution brings us one step closer to providing essential resources for our community's children.
+            </p>
+        </header>
+        <main class="lg:col-span-3 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg">
+            <div id="donation-form">
+                <h2 class="text-2xl font-bold mb-4 dark:text-white">Make a Donation</h2>
+                <div class="mb-4">
+                    <label class="block text-slate-600 dark:text-slate-300 font-semibold mb-2">Select an amount</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button type="button" class="amount-btn w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg font-bold" data-amount="10">$10</button>
+                        <button type="button" class="amount-btn w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg font-bold" data-amount="25">$25</button>
+                        <button type="button" class="amount-btn w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg font-bold" data-amount="50">$50</button>
+                        <button type="button" class="amount-btn w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg font-bold" data-amount="100">$100</button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="custom-amount" class="block text-slate-600 dark:text-slate-300 font-semibold mb-2">Or enter a custom amount</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 font-bold">$</span>
+                        <input type="number" id="custom-amount" class="w-full pl-7 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="donor-name" class="block text-slate-600 dark:text-slate-300 font-semibold mb-2">Your Name</label>
+                    <input type="text" id="donor-name" class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg" placeholder="e.g., Jane Doe" required>
+                </div>
+                <div class="mb-4">
+                    <label for="donor-email" class="block text-slate-600 dark:text-slate-300 font-semibold mb-2">Your Email</label>
+                    <input type="email" id="donor-email" class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg" placeholder="e.g., jane.doe@example.com" required>
+                </div>
+                <div class="mb-6">
+                    <label for="donor-message" class="block text-slate-600 dark:text-slate-300 font-semibold mb-2">Leave a message (optional)</label>
+                    <textarea id="donor-message" rows="3" class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg" placeholder="Sending my support!"></textarea>
+                </div>
+                <div id="paypal-button-container" class="mt-6"></div>
+                <div id="error-message" class="mt-4 p-4 bg-red-100 text-red-800 rounded-lg text-center font-semibold hidden"></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // --- DOM ELEMENT REFERENCES ---
+        const donorNameInput = document.getElementById('donor-name');
+        const donorEmailInput = document.getElementById('donor-email');
+        const donorMessageInput = document.getElementById('donor-message');
+        const customAmountInput = document.getElementById('custom-amount');
+        const amountButtons = document.querySelectorAll('.amount-btn');
+        const errorMessageEl = document.getElementById('error-message');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const htmlEl = document.documentElement;
+
+        // --- NEW: DARK MODE LOGIC ---
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                htmlEl.classList.add('dark');
+                darkModeToggle.checked = true;
+            } else {
+                htmlEl.classList.remove('dark');
+                darkModeToggle.checked = false;
+            }
+            localStorage.setItem('theme', theme);
+        };
+
+        darkModeToggle.addEventListener('change', () => {
+            applyTheme(darkModeToggle.checked ? 'dark' : 'light');
+        });
+
+        // Check for saved theme or system preference on page load
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else if (systemPrefersDark) {
+            applyTheme('dark');
+        } else {
+            applyTheme('light');
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function displayError(message) {
+            errorMessageEl.textContent = message;
+            errorMessageEl.classList.remove('hidden');
+        }
+        function hideError() {
+            errorMessageEl.classList.add('hidden');
+        }
+
+        // --- EVENT LISTENERS for amount selection ---
+        amountButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const amount = event.currentTarget.dataset.amount;
+                customAmountInput.value = amount;
+                amountButtons.forEach(btn => btn.classList.remove('selected'));
+                event.currentTarget.classList.add('selected');
+            });
+        });
+        customAmountInput.addEventListener('input', () => {
+            amountButtons.forEach(btn => btn.classList.remove('selected'));
+        });
+
+        // --- PAYPAL BUTTON LOGIC ---
+        paypal.Buttons({
+            // CORRECTED: Style object with a compatible configuration
+            style: {
+                shape: 'pill',
+                color: 'black',
+                layout: 'vertical',
+                // The 'label' property has been removed to prevent conflicts.
+                // It will default to the standard PayPal logo.
+            },
+
+            createOrder: async (data, actions) => {
+                hideError();
+                const name = donorNameInput.value.trim();
+                const email = donorEmailInput.value.trim();
+                const message = donorMessageInput.value.trim();
+                const amount = parseFloat(customAmountInput.value);
+
+                if (!name || !email || !/^\S+@\S+\.\S+$/.test(email) || isNaN(amount) || amount <= 0) {
+                    displayError('Please fill out your name, a valid email, and a donation amount.');
+                    return actions.reject();
+                }
+
+                try {
+                    const response = await fetch('/api/paypal/create-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: amount,
+                            donorInfo: { name, email, message }
+                        })
+                    });
+                    const orderData = await response.json();
+                    if (orderData.orderID) return orderData.orderID;
+                    throw new Error(orderData.error || 'Failed to create order.');
+                } catch (error) {
+                    console.error('Create Order Error:', error);
+                    displayError('Could not initiate PayPal transaction.');
+                    return actions.reject();
+                }
+            },
+            onApprove: async (data, actions) => {
+                try {
+                    const response = await fetch('/api/paypal/capture-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: data.orderID })
+                    });
+                    const captureData = await response.json();
+                    if (captureData.status === 'success') {
+                        const name = donorNameInput.value.trim();
+                        const amount = parseFloat(customAmountInput.value);
+                        window.location.href = `success.html?name=${encodeURIComponent(name)}&amount=${amount}`;
+                    } else {
+                        throw new Error(captureData.error || 'Failed to capture payment.');
+                    }
+                } catch (error) {
+                    console.error('Capture Order Error:', error);
+                    displayError('Your payment could not be finalized.');
+                }
+            },
+            onError: (err) => {
+                console.error('PayPal Button Error:', err);
+                displayError('An error occurred with the PayPal transaction.');
+            }
+        }).render('#paypal-button-container');
+    </script>
+</body>
+</html>
