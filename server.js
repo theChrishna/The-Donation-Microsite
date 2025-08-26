@@ -60,7 +60,6 @@ async function generateThankYouMessage(name, amount, message) {
 
 // --- PayPal API Endpoints ---
 app.post('/api/paypal/create-order', async (req, res) => {
-    // ... (rest of the function is the same)
     const { amount, donorInfo } = req.body;
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
@@ -84,7 +83,6 @@ app.post('/api/paypal/create-order', async (req, res) => {
 });
 
 app.post('/api/paypal/capture-order', async (req, res) => {
-    // ... (rest of the function is the same)
     const { orderID } = req.body;
     const request = new paypal.orders.OrdersCaptureRequest(orderID);
     request.requestBody({});
@@ -99,14 +97,12 @@ app.post('/api/paypal/capture-order', async (req, res) => {
 
 // --- Webhook Verification Endpoint ---
 app.get('/api/webhooks/paypal', (req, res) => {
-    // ... (rest of the function is the same)
     console.log('✅ Received a GET request to the webhook URL for validation.');
     res.status(200).send('Webhook endpoint is active and listening for POST requests.');
 });
 
 // --- PayPal Webhook Endpoint ---
 app.post('/api/webhooks/paypal', async (req, res) => {
-    // ... (rest of the function is the same)
     const event = req.body;
     if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
         console.log('✅ Received successful payment webhook.');
